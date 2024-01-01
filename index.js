@@ -1,25 +1,22 @@
 import express  from "express";
 import { config } from "dotenv";
 import bookrouter from "./routes/book.js";
+import userrouter from "./routes/user.js";
 import mongoose from "mongoose";
+import {connectToDB} from './config/dbConfig.js';
 
 config ();//env
-
+connectToDB();
 const app = express ();
-const mongoURI = process.env.DB_CONNECTION ||
-"mongodb://localhost:27017/library";
-mongoose.connect(mongoURI)
-        .then((suc)=>{
-            console.log("mongodb connected successfully!!"+
-            suc.connection.host)
 
-        }).catch(err=>{
-            console.log("cannot connect mongodb")
-            console.log(err)
-            process.exit(1)
-        })
+
         app.use(express.json())
         app.use("/book",bookrouter)
+        app.use("/user",userrouter)
 
+app.use((err,req,res,next)=>{
+res.status(err.status||500)
+res.send(err.message||"תקלהלהלהלה")
+})
         let port=process.env.PORT||4000;
         app.listen(port,console.log(`app is listening on port ${port}`));

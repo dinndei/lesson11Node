@@ -1,8 +1,17 @@
-import {Book} from '../models/book.js'
+import {Book,bookValid} from '../models/book.js'
 import mongoose from 'mongoose'
 export const getAllBooks= async (req,res)=>{
+    let {name,numP,author}=req.query;
     try{
-        let allbooks=await Book.find({});
+        let allbooks;
+        let so={};
+        if(name)
+        so.name=name;
+        if(numP)
+        so.numP=numP;
+        if(author)
+        so.author=author;
+     allbooks=await Book.find(so);
         res.json(allbooks);
     }
     catch{
@@ -16,11 +25,11 @@ export const getBookById= async (req,res)=>{
             return res.status(400).send("wrong id structure");
         let book=await Book.findById(id);
         if(!book)
-        return res.status(40).send("no book w/ such id");
+        return res.status(404).send("not found - book w/ such id");
         res.json(book);
     }
     catch{
-        res.status(400).send("sorry but error in book");
+        res.status(400).send("sorry but error in book"+err.message);
     }
 }
     export const deleteBook= async (req,res)=>{
@@ -49,15 +58,14 @@ export const getBookById= async (req,res)=>{
             book.numP=req.body.numP||book.numP;
             book.author=req.body.author||book.author;
             await book.save();
-            return res.json(book);
+            res.json(book);
 
         }
         catch{
             res.status(400).send("error in update");
         }
+    
     }
-    //"error in adding new book" משום מה זה גם מוסיף את הספר החדש וגם כותב לי בפוסטמן את 
-    //מעניין למה ניסיתי לשחק עם זה די הרבה וזה לא שינה כלום...
     export const addBook= async (req,res)=>{
         let {name,numP,author}=req.body;
             if(!name||!numP)
@@ -66,7 +74,7 @@ export const getBookById= async (req,res)=>{
             let sameBook=await Book.find({name,numP,});
             if(!sameBook||sameBook.length>0)
               res.status(409).send("already have ur book ♥");
-            let newBook=Book.create({name,numP,author});
+            let newBook=new Book({name,numP,author});
             await newBook.save();
              res.status(201).send("workes!");
 
@@ -74,4 +82,20 @@ export const getBookById= async (req,res)=>{
         catch{
             res.status(400).send("error in adding new book");
         }
+    }
+        export const BooksBetween= async (req,res)=>{
+            let {min,max}=req.query;
+            try{
+                let allbooks;
+                let so={};
+                if(min)
+                so.numP={$gte:min};
+                if(max)
+                so.numP={$lte:max};
+             allbooks=await Book.find(so);
+                res.json(allbooks);
+            }
+            catch{
+                res.status(400).send("error in adding new book");
+            }
     }
